@@ -1,0 +1,53 @@
+#include <iostream>
+#include <filesystem>
+#include <fstream>
+using namespace std;
+namespace fs = filesystem;
+
+class FileManager {
+public:
+    void list(const string& path=".") {
+        for (auto& p : fs::directory_iterator(path))
+            cout << (fs::is_directory(p) ? "[DIR] " : "[FILE] ") << p.path().filename() << "\n";
+    }
+
+    void createFile(const string& path) { ofstream(path); }
+    void createDir(const string& path) { fs::create_directory(path); }
+
+    void remove(const string& path) { fs::remove_all(path); }
+
+    void rename(const string& oldP, const string& newP) { fs::rename(oldP, newP); }
+
+    void copy(const string& from, const string& to, bool move=false) {
+        if (fs::is_directory(from))
+            fs::copy(from, to, fs::copy_options::recursive);
+        else fs::copy(from, to);
+        if (move) fs::remove_all(from);
+    }
+
+    uintmax_t size(const string& path) {
+        if (fs::is_regular_file(path)) return fs::file_size(path);
+        uintmax_t s = 0;
+        for (auto& p : fs::recursive_directory_iterator(path))
+            if (fs::is_regular_file(p)) s += fs::file_size(p);
+        return s;
+    }
+
+    void search(const string& path, const string& mask) {
+        for (auto& p : fs::recursive_directory_iterator(path))
+            if (p.path().filename().string().find(mask) != string::npos)
+                cout << p.path() << "\n";
+    }
+};
+
+int main() {
+    FileManager fm;
+    fm.list(); // показати поточну папку
+    // fm.createDir("test");
+    // fm.createFile("test/file.txt");
+    // fm.rename("test/file.txt", "test/new.txt");
+    // fm.copy("test", "copy_test");
+    // cout << "Size: " << fm.size("test") << " bytes\n";
+    // fm.search(".", "txt");
+    return 0;
+}
